@@ -47,7 +47,7 @@
       <div class="tag">Lives: <span id="lives">3</span></div>
       <div class="tag">Score: <span id="score">0</span></div>
       <div class="tag">Level: <span id="level">1</span>/10</div>
-      <div class="tag">Character: <span id="char-name">Manan</span></div>
+      <div class="tag">Character: <span id="char-name">Garv</span></div>
       <div class="tag">Theme: <span id="theme-name">Forest</span></div>
     </div>
     <div class="canvas-wrap"><canvas id="game" width="800" height="400" tabindex="0" aria-label="Game canvas"></canvas></div>
@@ -59,17 +59,17 @@
       <h1>Hero’s Sacrifice</h1>
       <p>Pick your form, then step into the woods.</p>
       <div class="char-grid" id="char-grid" role="radiogroup" aria-label="Choose character">
-        <label class="char" data-key="manan" role="radio" aria-checked="true" tabindex="0">
-          <input type="radio" name="character" value="manan" checked />
-          <h3>🐶 Manan</h3><small>Balanced dog. Grip + steady jump.</small>
-        </label>
-        <label class="char" data-key="liberator" role="radio" aria-checked="false" tabindex="0">
-          <input type="radio" name="character" value="liberator" />
-          <h3>🐊 Liberator</h3><small>Heavy croc. Slower accel, tanky landings.</small>
+        <label class="char" data-key="garv" role="radio" aria-checked="true" tabindex="0">
+          <input type="radio" name="character" value="garv" checked />
+          <h3>🐶 Garv</h3><small>Balanced dog. Grip + steady jump.</small>
         </label>
         <label class="char" data-key="garvit" role="radio" aria-checked="false" tabindex="0">
           <input type="radio" name="character" value="garvit" />
-          <h3>🦅 Garvit</h3><small>Eagle. Hover + glide (hold jump).</small>
+          <h3>🐊 Garvit</h3><small>Heavy croc. Slower accel, tanky landings.</small>
+        </label>
+        <label class="char" data-key="gurmehar" role="radio" aria-checked="false" tabindex="0">
+          <input type="radio" name="character" value="gurmehar" />
+          <h3>🦅 Gurmehar</h3><small>Eagle. Hover + glide (hold jump).</small>
         </label>
       </div>
       <div class="actions"><button class="btn-primary" id="start">Start Adventure</button></div>
@@ -103,11 +103,11 @@ window.addEventListener('DOMContentLoaded',()=>{
 
   // ===== Characters with physics
   const CHARACTERS={
-    manan:{label:'Manan',emoji:'🐶',ACCEL:0.35,MAX:3.6,JUMP:-11.8,GRAVITY:0.52,DRAG_G:0.85,DRAG_A:0.985,AIR:0.65,HOVER:0,GLIDE:false},
-    liberator:{label:'Liberator',emoji:'🐊',ACCEL:0.28,MAX:3.2,JUMP:-10.2,GRAVITY:0.62,DRAG_G:0.88,DRAG_A:0.988,AIR:0.55,HOVER:0,GLIDE:false},
-    garvit:{label:'Garvit',emoji:'🦅',ACCEL:0.32,MAX:3.9,JUMP:-10.6,GRAVITY:0.38,DRAG_G:0.86,DRAG_A:0.992,AIR:0.8,HOVER:18,GLIDE:true}
+    garv:{label:'Garv',emoji:'🐶',ACCEL:0.35,MAX:3.6,JUMP:-11.8,GRAVITY:0.52,DRAG_G:0.85,DRAG_A:0.985,AIR:0.65,HOVER:0,GLIDE:false},
+    garvit:{label:'Garvit',emoji:'🐊',ACCEL:0.28,MAX:3.2,JUMP:-10.2,GRAVITY:0.62,DRAG_G:0.88,DRAG_A:0.988,AIR:0.55,HOVER:0,GLIDE:false},
+    gurmehar:{label:'Gurmehar',emoji:'🦅',ACCEL:0.32,MAX:3.9,JUMP:-10.6,GRAVITY:0.38,DRAG_G:0.86,DRAG_A:0.992,AIR:0.8,HOVER:18,GLIDE:true}
   };
-  let currentCharKey='manan'; let CH=CHARACTERS[currentCharKey];
+  let currentCharKey='garv'; let CH=CHARACTERS[currentCharKey];
 
   // ===== Themes & palettes
   const SKY={
@@ -241,19 +241,19 @@ window.addEventListener('DOMContentLoaded',()=>{
   const addScore=n=>{score+=n;updateHUD()};
 
   // ===== Character select sync
-  function syncCardsFromRadios(){const input=document.querySelector('input[name="character"]:checked');const card=input?.closest('.char');document.querySelectorAll('#char-grid .char').forEach(c=>c.setAttribute('aria-checked',c===card?'true':'false'));if(input){currentCharKey=input.value;CH=CHARACTERS[currentCharKey];elChar.textContent=CH.label}}
-  function forceSelectCard(card){const input=card.querySelector('input[type="radio"]');if(!input)return; if(!input.checked){input.checked=true;input.dispatchEvent(new Event('change',{bubbles:true}))}else syncCardsFromRadios()}
+  function syncCardsFromRadios(){const input=document.querySelector('input[name="character"]:checked');const card=input?.closest('.char');document.querySelectorAll('#char-grid .char').forEach(c=>c.setAttribute('aria-checked',c===card?'true':'false'));if(input){currentCharKey=input.value;CH=CHARACTERS[currentCharKey];elChar.textContent=CH.label}};
+  function forceSelectCard(card){const input=card.querySelector('input[type="radio"]');if(!input)return; if(!input.checked){input.checked=true;input.dispatchEvent(new Event('change',{bubbles:true}))}else syncCardsFromRadios()};
   grid.addEventListener('click',e=>{const card=e.target.closest('.char');if(card){e.preventDefault();forceSelectCard(card)}});
   grid.addEventListener('change',e=>{if(e.target&&e.target.name==='character'){syncCardsFromRadios();const k=e.target.value;const C=CHARACTERS[k];if(C)toast(`Selected ${C.emoji} ${C.label}`)}});
   grid.addEventListener('keydown',e=>{const card=e.target.closest('.char');if(!card)return; if(e.key==='Enter'||e.key===' '){e.preventDefault();forceSelectCard(card)}});
 
   // ===== State transitions
-  function doRespawn(){player.x=respawnX;player.y=respawnY;player.vx=0;player.vy=0;player.onGround=false;player.coyote=0;player.jumpBuf=0;player.doubleReady=CH.GLIDE?true:false;player.gliding=false;snapToGround();graceUntil=performance.now()+900;keys.Space=keys.ArrowUp=keys.KeyW=false}
-  function setState(s){state=s;show($menu,s==='menu');show($story,s==='story');show($gameover,s==='gameover');show($victory,s==='victory');if(s==='story'){const L=levels[currentLevel];elStoryTitle.textContent=`Level ${currentLevel+1}: ${L.name}`;elStoryText.textContent=L.story}if(s==='gameover')elLivesRemaining.textContent=String(lives);if(s==='victory')elFinalScore.textContent=String(score);if(s==='playing'){graceUntil=performance.now()+800;focusCanvas()}updateHUD()}
-  function restart(){currentLevel=0;lives=3;score=0;camX=0;respawnX=50;respawnY=300;doRespawn();setState('menu')}
-  function startGame(){const input=document.querySelector('input[name="character"]:checked');currentCharKey=(input&&input.value)||'manan';CH=CHARACTERS[currentCharKey];syncCardsFromRadios();currentLevel=0;lives=3;score=0;camX=0;respawnX=50;respawnY=300;doRespawn();setState('story')}
-  function nextLevel(){if(currentLevel<levels.length-1){currentLevel++;camX=0;respawnX=50;respawnY=300;doRespawn();setState('story')}else{setState('victory');toast('You saved Alex.')}}
-  function hit(reason){if(performance.now()<graceUntil)return; lives=Math.max(0,lives-1);toast(reason);setState('gameover')}
+  function doRespawn(){player.x=respawnX;player.y=respawnY;player.vx=0;player.vy=0;player.onGround=false;player.coyote=0;player.jumpBuf=0;player.doubleReady=CH.GLIDE?true:false;player.gliding=false;snapToGround();graceUntil=performance.now()+900;keys.Space=keys.ArrowUp=keys.KeyW=false};
+  function setState(s){state=s;show($menu,s==='menu');show($story,s==='story');show($gameover,s==='gameover');show($victory,s==='victory');if(s==='story'){const L=levels[currentLevel];elStoryTitle.textContent=`Level ${currentLevel+1}: ${L.name}`;elStoryText.textContent=L.story}if(s==='gameover')elLivesRemaining.textContent=String(lives);if(s==='victory')elFinalScore.textContent=String(score);if(s==='playing'){graceUntil=performance.now()+800;focusCanvas()}updateHUD()};
+  function restart(){currentLevel=0;lives=3;score=0;camX=0;respawnX=50;respawnY=300;doRespawn();setState('menu')};
+  function startGame(){const input=document.querySelector('input[name="character"]:checked');currentCharKey=(input&&input.value)||'garv';CH=CHARACTERS[currentCharKey];syncCardsFromRadios();currentLevel=0;lives=3;score=0;camX=0;respawnX=50;respawnY=300;doRespawn();setState('story')};
+  function nextLevel(){if(currentLevel<levels.length-1){currentLevel++;camX=0;respawnX=50;respawnY=300;doRespawn();setState('story')}else{setState('victory');toast('You saved Alex.')}};
+  function hit(reason){if(performance.now()<graceUntil)return; lives=Math.max(0,lives-1);toast(reason);setState('gameover')};
 
   // ===== Input (jump buffer + coyote)
   const blockKeys=new Set(['Space','ArrowUp','ArrowLeft','ArrowRight','Enter','KeyW','KeyA','KeyD']);
@@ -264,12 +264,12 @@ window.addEventListener('DOMContentLoaded',()=>{
   btnStart.addEventListener('click',startGame);btnContinue.addEventListener('click',()=>setState('playing'));btnTryAgain.addEventListener('click',()=>{doRespawn();setState('playing')});btnRestart.addEventListener('click',restart);btnPlayAgain.addEventListener('click',restart);btnSkip.addEventListener('click',()=>{addScore(500);toast('Level complete! +500');nextLevel()});btnMenu.addEventListener('click',()=>setState('menu'));
 
   // ===== Physics helpers
-  function snapToGround(){const L=levels[currentLevel];const cx=player.x+player.w/2;let bestY=null;for(const p of L.platforms){if(p.type==='lava')continue; if(cx>=p.x&&cx<=p.x+p.w&&p.y>=player.y&&(bestY===null||p.y<bestY))bestY=p.y}if(bestY===null)bestY=GROUND_Y;const hover=CHARACTERS[currentCharKey].HOVER||0;player.y=bestY-player.h-hover;player.vy=0;player.onGround=true}
-  function applyEnvForces(){const L=levels[currentLevel]; if(L.env.windX){player.vx+=L.env.windX*(player.onGround?0.15:0.35)} }
+  function snapToGround(){const L=levels[currentLevel];const cx=player.x+player.w/2;let bestY=null;for(const p of L.platforms){if(p.type==='lava')continue; if(cx>=p.x&&cx<=p.x+p.w&&p.y>=player.y&&(bestY===null||p.y<bestY))bestY=p.y}if(bestY===null)bestY=GROUND_Y;const hover=CHARACTERS[currentCharKey].HOVER||0;player.y=bestY-player.h-hover;player.vy=0;player.onGround=true};
+  function applyEnvForces(){const L=levels[currentLevel]; if(L.env.windX){player.vx+=L.env.windX*(player.onGround?0.15:0.35)} };
 
   // ===== Updates
-  function updateWorld(){const L=levels[currentLevel];for(const p of L.platforms){if(p.type==='moving'){const ax=p._ax??p.ax??p.x,bx=p._bx??p.bx??p.x;if(p._ax==null){p._ax=ax;p._bx=bx}const u=(Math.sin(t*(p.speed||1)+(p.phase||0))+1)/2;p.x=ax+u*(bx-ax)}} if(L.hazards) for(const h of L.hazards){if(h.kind==='ember'){if(performance.now()-(h.last||0)>h.rate){h.last=performance.now();const ex=camX+Math.random()*W+W*0.6;L.hazards.push({kind:'emberDrop',x:ex,y:-20,v:2.4+Math.random()*1.8})}}} if(levels[currentLevel].hazards){levels[currentLevel].hazards=levels[currentLevel].hazards.filter(z=>{if(z.kind!=='emberDrop')return true; z.y+=z.v; if(z.y>H+40)return false; if(AABB(player,{x:z.x-6,y:z.y-6,w:12,h:12})) {hit('Scorched by ash!'); return false;} return true;})}}
-  function updateEnemies(){const L=levels[currentLevel];for(const en of (L.enemies||[])){en.x+=(en.vx||0);if(en.x<=0||en.x+en.w>=L.levelW){en.vx=-(en.vx||0);en.x=clamp(en.x,0,L.levelW-en.w)}}}
+  function updateWorld(){const L=levels[currentLevel];for(const p of L.platforms){if(p.type==='moving'){const ax=p._ax??p.ax??p.x,bx=p._bx??p.bx??p.x;if(p._ax==null){p._ax=ax;p._bx=bx}const u=(Math.sin(t*(p.speed||1)+(p.phase||0))+1)/2;p.x=ax+u*(bx-ax)}} if(L.hazards) for(const h of L.hazards){if(h.kind==='ember'){if(performance.now()-(h.last||0)>h.rate){h.last=performance.now();const ex=camX+Math.random()*W+W*0.6;L.hazards.push({kind:'emberDrop',x:ex,y:-20,v:2.4+Math.random()*1.8})}}} if(levels[currentLevel].hazards){levels[currentLevel].hazards=levels[currentLevel].hazards.filter(z=>{if(z.kind!=='emberDrop')return true; z.y+=z.v; if(z.y>H+40)return false; if(AABB(player,{x:z.x-6,y:z.y-6,w:12,h:12})) {hit('Scorched by ash!'); return false;} return true;})}};
+  function updateEnemies(){const L=levels[currentLevel];for(const en of (L.enemies||[])){en.x+=(en.vx||0);if(en.x<=0||en.x+en.w>=L.levelW){en.vx=-(en.vx||0);en.x=clamp(en.x,0,L.levelW-en.w)}}};
 
   function moveWithPhysics(){const L=levels[currentLevel];const g=CH.GRAVITY*(L.env.gravityScale||1); const left=keys['ArrowLeft']||keys['KeyA'],right=keys['ArrowRight']||keys['KeyD']; const want=(right?1:0)-(left?1:0);
     const accel=CH.ACCEL*(player.onGround?1:CH.AIR); player.vx+=want*accel; player.vx=clamp(player.vx,-CH.MAX,CH.MAX);
@@ -306,7 +306,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   function rr(x,y,w,h,r){const a=Math.min(r,w/2,h/2);ctx.beginPath();ctx.moveTo(x+a,y);ctx.arcTo(x+w,y,x+w,y+h,a);ctx.arcTo(x+w,y+h,x,y+h,a);ctx.arcTo(x,y+h,x,y,a);ctx.arcTo(x,y,x+w,y,a);ctx.closePath()}
   function drawHills(color,amp,yBase,step,width){ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(-100,H);for(let x=-100;x<=width+100;x+=step){const y=yBase+Math.sin((x+123)*0.002)*amp+Math.cos((x-77)*0.003)*amp*0.6;ctx.lineTo(x,y)}ctx.lineTo(width+120,H);ctx.closePath();ctx.fill()}
   function drawTrees(width,density,yFoot,scale,seedShift,leaf='#2f6b37'){for(let i=0;i<Math.ceil(width/density);i++){const x=i*density+((i*97+seedShift)%density)*0.2;const h=50*scale+(Math.sin((x+seedShift)*0.01)*20+20)*scale;const trunkW=6*scale,trunkX=x-trunkW/2,trunkY=yFoot-h*0.25;ctx.fillStyle='#4a3a24';ctx.fillRect(trunkX,trunkY,trunkW,h*0.25);ctx.fillStyle=leaf;for(let t=0;t<3;t++){const tw=(h*0.8)-t*(h*0.2);const ty=trunkY-t*(h*0.22)-h*0.15;ctx.beginPath();ctx.moveTo(x,ty-h*0.18);ctx.lineTo(x-tw/2,ty+h*0.12);ctx.lineTo(x+tw/2,ty+h*0.12);ctx.closePath();ctx.fill()}}}
-  function drawPlayer(){const k=currentCharKey;ctx.save();ctx.shadowColor='rgba(0,0,0,.4)';ctx.shadowBlur=8; if(k==='manan'){ctx.fillStyle='#1E4DD8';rr(player.x,player.y+16,player.w,16,4);ctx.fill();ctx.fillStyle='#D61E1E';rr(player.x+4,player.y+8,24,12,3);ctx.fill();ctx.fillStyle='#F5D3B1';rr(player.x+8,player.y+4,16,12,3);ctx.fill();ctx.fillStyle='#000';ctx.fillRect(player.x+10,player.y+8,2,2);ctx.fillRect(player.x+20,player.y+8,2,2)} else if(k==='liberator'){ctx.fillStyle='#2e8b57';rr(player.x,player.y+6,player.w,26,6);ctx.fill();ctx.fillStyle='#1f6a42';rr(player.x+2,player.y+22,player.w-4,10,4);ctx.fill();ctx.fillStyle='#114d31';rr(player.x+player.w-8,player.y+10,10,8,2);ctx.fill();ctx.fillStyle='#000';ctx.fillRect(player.x+player.w-4,player.y+12,3,3)} else {const hover=CHARACTERS.garvit.HOVER;ctx.fillStyle='rgba(0,0,0,0.25)';ctx.beginPath();ctx.ellipse(player.x+16,player.y+player.h+hover+10,16,6,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#8b5a2b';rr(player.x,player.y+8,player.w,20,8);ctx.fill();ctx.fillStyle='#5a3a1a';rr(player.x-10,player.y+14,12,8,4);ctx.fill();rr(player.x+player.w-2,player.y+14,12,8,4);ctx.fill();ctx.fillStyle='#f5d3b1';rr(player.x+10,player.y+2,12,10,4);ctx.fill();ctx.fillStyle='#000';ctx.fillRect(player.x+14,player.y+6,2,2)} ctx.shadowBlur=0;ctx.restore()}
+  function drawPlayer(){const k=currentCharKey;ctx.save();ctx.shadowColor='rgba(0,0,0,.4)';ctx.shadowBlur=8; if(k==='garv'){ctx.fillStyle='#1E4DD8';rr(player.x,player.y+16,player.w,16,4);ctx.fill();ctx.fillStyle='#D61E1E';rr(player.x+4,player.y+8,24,12,3);ctx.fill();ctx.fillStyle='#F5D3B1';rr(player.x+8,player.y+4,16,12,3);ctx.fill();ctx.fillStyle='#000';ctx.fillRect(player.x+10,player.y+8,2,2);ctx.fillRect(player.x+20,player.y+8,2,2)} else if(k==='garvit'){ctx.fillStyle='#2e8b57';rr(player.x,player.y+6,player.w,26,6);ctx.fill();ctx.fillStyle='#1f6a42';rr(player.x+2,player.y+22,player.w-4,10,4);ctx.fill();ctx.fillStyle='#114d31';rr(player.x+player.w-8,player.y+10,10,8,2);ctx.fill();ctx.fillStyle='#000';ctx.fillRect(player.x+player.w-4,player.y+12,3,3)} else {const hover=CHARACTERS.gurmehar.HOVER;ctx.fillStyle='rgba(0,0,0,0.25)';ctx.beginPath();ctx.ellipse(player.x+16,player.y+player.h+hover+10,16,6,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#8b5a2b';rr(player.x,player.y+8,player.w,20,8);ctx.fill();ctx.fillStyle='#5a3a1a';rr(player.x-10,player.y+14,12,8,4);ctx.fill();rr(player.x+player.w-2,player.y+14,12,8,4);ctx.fill();ctx.fillStyle='#f5d3b1';rr(player.x+10,player.y+2,12,10,4);ctx.fill();ctx.fillStyle='#000';ctx.fillRect(player.x+14,player.y+6,2,2)} ctx.shadowBlur=0;ctx.restore()}
   function draw(){const L=levels[currentLevel];const prog=L.levelW>W?camX/(L.levelW-W):0;const [c1,c2]=skyFor(L.theme,prog);const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,c1);g.addColorStop(1,c2);ctx.fillStyle=g;ctx.fillRect(0,0,W,H); const worldW=L.levelW; const leafColor=(L.theme==='desert'||L.theme==='dunes')?'#9a7b3d':(L.theme==='snow')?'#cfe6f1':(L.theme==='volcanic')?'#7b2b20':'#2f6b37';
     ctx.save();ctx.translate(-camX*0.35,0);drawHills('#8fc9a3',22,H-140,18,worldW);ctx.restore();
     ctx.save();ctx.translate(-camX*0.55,0);drawTrees(worldW,160,H-60,0.9,13,leafColor);ctx.restore();
